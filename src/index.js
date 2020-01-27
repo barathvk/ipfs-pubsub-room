@@ -20,7 +20,7 @@ module.exports = (ipfs, topic, options) => {
 }
 
 class PubSubRoom extends EventEmitter {
-  constructor (ipfs, topic, options) {
+  constructor(ipfs, topic, options) {
     super()
     this._ipfs = ipfs
     this._topic = topic
@@ -43,15 +43,15 @@ class PubSubRoom extends EventEmitter {
     this._ipfs.on('stop', this.leave.bind(this))
   }
 
-  getPeers () {
+  getPeers() {
     return this._peers.slice(0)
   }
 
-  hasPeer (peer) {
+  hasPeer(peer) {
     return this._peers.indexOf(peer) >= 0
   }
 
-  leave () {
+  leave() {
     timers.clearInterval(this._interval)
     Object.keys(this._connections).forEach((peer) => {
       this._connections[peer].stop()
@@ -60,7 +60,7 @@ class PubSubRoom extends EventEmitter {
     this.emit('stop')
   }
 
-  broadcast (_message) {
+  broadcast(_message) {
     let message = encoding(_message)
     this._ipfs.pubsub.publish(this._topic, message, (err) => {
       if (err) {
@@ -69,7 +69,7 @@ class PubSubRoom extends EventEmitter {
     })
   }
 
-  sendTo (peer, message) {
+  sendTo(peer, message) {
     let conn = this._connections[peer]
     if (!conn) {
       conn = new Connection(peer, this._ipfs, this)
@@ -96,14 +96,14 @@ class PubSubRoom extends EventEmitter {
       from: this._ipfs._peerInfo.id.toB58String(),
       data: Buffer.from(message).toString('hex'),
       seqno: seqno.toString('hex'),
-      topicIDs: [ this._topic ],
-      topicCIDs: [ this._topic ]
+      topicIDs: [this._topic],
+      topicCIDs: [this._topic]
     }
 
     conn.push(Buffer.from(JSON.stringify(msg)))
   }
 
-  _start () {
+  _start() {
     this._interval = timers.setInterval(
       this._pollPeers.bind(this),
       this._options.pollInterval)
@@ -121,12 +121,12 @@ class PubSubRoom extends EventEmitter {
       this._ipfs.pubsub.unsubscribe(this._topic, listener)
     })
 
-    this._ipfs._libp2pNode.handle(PROTOCOL, directConnection.handler)
+    this._ipfs.libp2p.handle(PROTOCOL, directConnection.handler)
 
     directConnection.emitter.on(this._topic, this._handleDirectMessage)
   }
 
-  _pollPeers () {
+  _pollPeers() {
     this._ipfs.pubsub.peers(this._topic, (err, _newPeers) => {
       if (err) {
         this.emit('error', err)
@@ -141,7 +141,7 @@ class PubSubRoom extends EventEmitter {
     })
   }
 
-  _emitChanges (newPeers) {
+  _emitChanges(newPeers) {
     const differences = diff(this._peers, newPeers)
 
     differences.added.forEach((addedPeer) => this.emit('peer joined', addedPeer))
@@ -150,11 +150,11 @@ class PubSubRoom extends EventEmitter {
     return differences.added.length > 0 || differences.removed.length > 0
   }
 
-  _onMessage (message) {
+  _onMessage(message) {
     this.emit('message', message)
   }
 
-  _handleDirectMessage (message) {
+  _handleDirectMessage(message) {
     if (message.to === this._ipfs._peerInfo.id.toB58String()) {
       const m = Object.assign({}, message)
       delete m.to
