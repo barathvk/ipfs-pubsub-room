@@ -9,7 +9,7 @@ const encoding = require('./encoding')
 const getPeerId = require('./peer-id')
 
 module.exports = class Connection extends EventEmitter {
-  constructor (id, ipfs, room) {
+  constructor(id, ipfs, room) {
     super()
     this._id = id
     this._ipfs = ipfs
@@ -18,7 +18,7 @@ module.exports = class Connection extends EventEmitter {
     this._connecting = false
   }
 
-  push (message) {
+  push(message) {
     if (this._connection) {
       this._connection.push(encoding(message))
     } else {
@@ -29,13 +29,13 @@ module.exports = class Connection extends EventEmitter {
     }
   }
 
-  stop () {
+  stop() {
     if (this._connection) {
       this._connection.end()
     }
   }
 
-  _getConnection () {
+  _getConnection() {
     this._connecting = true
     this._getPeerAddresses(this._id, (err, peerAddresses) => {
       if (err) {
@@ -48,7 +48,7 @@ module.exports = class Connection extends EventEmitter {
         return // early
       }
 
-      this._ipfs._libp2pNode.dialProtocol(peerAddresses[0], PROTOCOL, (err, conn) => {
+      this._ipfs.libp2p.dialProtocol(peerAddresses[0], PROTOCOL, (err, conn) => {
         if (err) {
           this.emit('disconnect')
           return // early
@@ -69,7 +69,7 @@ module.exports = class Connection extends EventEmitter {
     })
   }
 
-  _getPeerAddresses (peerId, callback) {
+  _getPeerAddresses(peerId, callback) {
     this._ipfs.swarm.peers((err, peersAddresses) => {
       if (err) {
         callback(err)
